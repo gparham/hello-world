@@ -1,0 +1,124 @@
+conn / as sysdba
+drop user gina cascade;
+
+grant connect,resource to gina identified by gina;
+alter user gina quota unlimited on system;
+
+conn gina/gina
+
+CREATE TABLE Q_TEMP (L_QUERY VARCHAR2(1000));
+INSERT INTO Q_TEMP VALUES ('TEST');
+INSERT INTO Q_TEMP VALUES ('TEST2');
+COMMIT;
+
+
+CREATE OR REPLACE PACKAGE PG_APRAPHST AS 
+  TYPE ACURSOR_TYPE IS REF CURSOR;
+  PROCEDURE APRAPHST (APRAPHST_CURSOR IN OUT PG_APRAPHST.ACURSOR_TYPE);
+END PG_APRAPHST;
+/
+
+CREATE OR REPLACE PACKAGE BODY PG_APRAPHST AS
+  PROCEDURE APRAPHST (APRAPHST_CURSOR IN OUT PG_APRAPHST.ACURSOR_TYPE) AS
+	  l_query varchar2(1000);
+	  TYPE APRAPHST_rec IS RECORD(
+		  	P_COMPANY_CODE VARCHAR2(10),
+		  	TEST NUMBER,
+		  	ORD NUMBER,
+		  	VENDOR_CODE VARCHAR2(100),
+		  	INVOICE_NUMBER VARCHAR2(100),
+		  	INVOICE_DATE DATE,
+		  	PO_NUMBER NUMBER,
+		  	TM_NUMBER VARCHAR2(100),
+		  	DISTRIBUTION_AMOUNT NUMBER,
+		  	AMOUNT_PAID NUMBER,
+		  	JOB_GL_NUMBER VARCHAR2(100),
+		  	FORMATTED_CC VARCHAR2(100),
+		  	MATERIAL_CODE NUMBER,
+		  	PERIOD_ID NUMBER,
+		  	SHORT_DESC VARCHAR2(100),
+		  	FISCAL_YEAR_OPENED NUMBER,
+		  	CURRENCY_FLAG VARCHAR2(100),
+		  	VENDOR_NAME VARCHAR2(100),
+		  	CHEQ_EFT NUMBER,
+		  	READY_TO_PAY VARCHAR2(1),
+		  	DATE_ENTERED DATE,
+		  	PAYMENT_METHOD VARCHAR2(2),
+        PAYMENT_STATUS VARCHAR2(2),
+        LAST_PAYMENT_DATE DATE,
+        SCHEDULED_AMOUNT NUMBER);     
+    l_dummy APRAPHST_rec;       	
+BEGIN  
+   l_query := 'SELECT ''' || 'FX' || ''' COMPANY_CODE, '|| 
+                '1 TEST, ' ||
+                '1 ORD, '||
+                '''TEST_VENDOR'' VENDOR_CODE, ' ||
+                '''101'' INVOICE_NUMBER, ' ||
+                'SYSDATE INVOICE_DATE, ' ||
+                '777777 PO_NUMBER, ' ||
+                '''001'' TM_NUMBER, ' ||
+                '455.01 DISTRIBUTION_AMOUNT, ' ||
+                '455.01 AMOUNT_PAID, ' ||
+                '102000 JOB_GL_NUMBER, ' ||
+                '''9-1'' FORMATTED_CC, ' ||
+                '2 MATERIAL_CODE, ' ||
+                '202107 PERIOD_ID, ' ||
+                '''TEST'' SHORT_DESC, ' ||
+                '2021 FISCAL_YEAR_OPENED, ' ||
+                '''Y'' CURRENCY_FLAG, ' ||
+                '''TEST_VENDOR'' VENDOR_NAME, ' ||
+                '999 CHEQ_EFT, ' ||
+                '''Y'' READY_TO_PAY, ' ||
+                'SYSDATE DATE_ENTERED, ' ||
+                '''C'' PAYMENT_METHOD, ' ||
+                '''A'' PAYMENT_STATUS, ' ||
+                'SYSDATE LAST_PAYMENT_DATE, ' ||
+                '999.99 SCHEDULED_AMOUNT ' ||		
+                'FROM Q_TEMP';
+		OPEN APRAPHST_CURSOR FOR l_query;		
+		Fetch APRAPHST_CURSOR into l_dummy;
+  END APRAPHST;
+END PG_APRAPHST;
+/
+
+set serveroutput on
+
+DECLARE
+  TYPE APRAPHST_rec IS RECORD(
+    P_COMPANY_CODE VARCHAR2(10),
+    TEST NUMBER,
+    ORD NUMBER,
+    VENDOR_CODE VARCHAR2(100),
+    INVOICE_NUMBER VARCHAR2(100),
+    INVOICE_DATE DATE,
+    PO_NUMBER NUMBER,
+    TM_NUMBER VARCHAR2(100),
+    DISTRIBUTION_AMOUNT NUMBER,
+    AMOUNT_PAID     NUMBER,
+    JOB_GL_NUMBER VARCHAR2(100),
+    FORMATTED_CC VARCHAR2(100),
+    MATERIAL_CODE NUMBER,
+    PERIOD_ID NUMBER,
+    SHORT_DESC VARCHAR2(100),
+    FISCAL_YEAR_OPENED NUMBER,
+    CURRENCY_FLAG VARCHAR2(100),
+    VENDOR_NAME VARCHAR2(100),
+    CHEQ_EFT NUMBER,
+    READY_TO_PAY VARCHAR2(1),
+    DATE_ENTERED DATE,
+    PAYMENT_METHOD VARCHAR2(2),
+    PAYMENT_STATUS VARCHAR2(2),
+    LAST_PAYMENT_DATE DATE,
+    SCHEDULED_AMOUNT NUMBER);
+  L_PO_CUR PG_APRAPHST.ACURSOR_TYPE;
+  l_po_rec APRAPHST_rec;
+BEGIN
+  PG_APRAPHST.APRAPHST (L_PO_CUR);
+  Loop
+    fetch L_PO_CUR into l_po_rec;
+    Exit When L_PO_CUR%NotFound;
+    dbms_output.put_line(l_po_rec.P_COMPANY_CODE);
+  End Loop;
+  close L_PO_CUR;
+END;
+/
