@@ -1,5 +1,5 @@
 conn / as sysdba
-drop user gina cascade;
+drop user ginalp cascade;
 
 grant connect,resource to gina identified by gina;
 alter user gina quota unlimited on system;
